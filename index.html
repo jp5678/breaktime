@@ -92,15 +92,20 @@
   }
   .course-name h1 {
     font-family: 'Noto Sans KR', sans-serif;
-    font-size: clamp(22px, 5vw, 48px);
+    font-size: clamp(18px, 3.5vw, 34px);
     font-weight: 700;
-    line-height: 1.2;
+    line-height: 1.4;
     background: linear-gradient(90deg, #ff6b6b, #ff9f43, #ffd93d, #6bcb77, #4d96ff, #c77dff, #ff6b6b);
     background-size: 200% auto;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: gradientShift 5s linear infinite;
+  }
+  .course-grade {
+    font-size: 0.85em;
+    opacity: 1;
+    font-weight: 900;
   }
   @keyframes gradientShift {
     0%   { background-position: 0% center; }
@@ -134,7 +139,7 @@
   }
   .clock-display {
     font-family: 'Exo 2', sans-serif;
-    font-size: clamp(56px, 15vw, 120px);
+    font-size: clamp(42px, 11vw, 90px);
     font-weight: 600;
     color: #ffffff;
     letter-spacing: clamp(2px, 1vw, 8px);
@@ -196,7 +201,7 @@
   .countdown-display { text-align: center; }
   .countdown-time {
     font-family: 'Exo 2', sans-serif;
-    font-size: clamp(42px, 9vw, 72px);
+    font-size: clamp(36px, 7vw, 60px);
     font-weight: 600; letter-spacing: 3px;
     color: #ff8c00; transition: color 0.5s;
   }
@@ -343,7 +348,8 @@
   <!-- Course Name -->
   <div class="section-label"><span class="arrow-right">▶</span> COURSE</div>
   <div class="course-name">
-    <h1>디지털리터러시와 AI활용</h1>
+    <h1>Digital Literacy and AI Utilization <span class="course-grade">(1st)</span></h1>
+    <h1>AI-Integrated Nursing Informatics <span class="course-grade">(3rd)</span></h1>
   </div>
 
   <!-- Clock -->
