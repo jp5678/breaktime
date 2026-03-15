@@ -39,7 +39,7 @@
     flex-direction: column;
     align-items: center;
     padding: clamp(16px, 3vh, 40px) clamp(16px, 5vw, 60px) 80px;
-    gap: clamp(20px, 3.5vh, 44px);
+    gap: clamp(10px, 1.8vh, 22px);
   }
 
   /* ─── HEADER BADGE ─── */
@@ -218,11 +218,12 @@
     color: #ff8c00; transition: color 0.5s;
   }
   .countdown-time.running { color: #ff8c00; }
-  .countdown-time.paused  { color: #ffaa44; }
+  .countdown-time.paused  { color: #ffaa44; animation: blink 1.2s ease-in-out infinite; }
+  .countdown-time.idle    { color: #ffaa44; }
   .countdown-time.done    { color: #ff6464; animation: flashRed 0.6s ease-in-out infinite; }
   @keyframes flashRed { 0%,100%{ opacity:1; } 50%{ opacity:0.4; } }
   @keyframes blink { 0%,100%{ opacity:1; } 50%{ opacity:0.25; } }
-  .countdown-time.paused  { animation: blink 1.2s ease-in-out infinite; }
+  .alarm-blink { animation: blink 1.4s ease-in-out infinite !important; }
 
   .progress-bar {
     width: 100%; height: 3px;
@@ -263,8 +264,8 @@
   .professor-card {
     display: flex; align-items: center; gap: 14px;
     width: 100%; max-width: 700px;
-    background: rgba(255,255,255,0.04);
-    border: 1px solid rgba(201,168,76,0.2);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(77,217,240,0.18);
     border-radius: 10px;
     padding: clamp(10px,1.5vh,16px) clamp(14px,3vw,24px);
     backdrop-filter: blur(8px);
@@ -277,11 +278,11 @@
   }
   .prof-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
   .prof-name {
-    font-family: 'Orbitron', monospace; font-size: 13px; font-weight: 400;
+    font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 400;
     letter-spacing: 3px; color: #b8d9f0;
   }
   .prof-sub {
-    font-family: 'Orbitron', monospace; font-size: 13px;
+    font-family: 'Orbitron', monospace; font-size: 11px;
     letter-spacing: 2px; color: #b8d9f0; margin-top: 3px;
   }
 
@@ -391,9 +392,28 @@
       <button class="btn-reset" onclick="resetTimer()">↺ RESET</button>
     </div>
     <div class="countdown-display">
-      <div class="countdown-time paused" id="countdownDisplay">05:00</div>
+      <div class="countdown-time idle" id="countdownDisplay">05:00</div>
       <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
     </div>
+  </div>
+
+  <!-- Alarm -->
+  <div class="section-label"><span class="arrow-right">▶</span> ALARM</div>
+  <div class="break-section" id="alarmCard">
+    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;color:var(--text-dim);">HOUR</label>
+        <select id="alarmHour" style="font-family:'Orbitron',monospace;font-size:11px;padding:6px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(77,217,240,0.3);color:#e8f4ff;border-radius:4px;cursor:pointer;"></select>
+      </div>
+      <span style="font-family:'Orbitron',monospace;font-size:18px;color:var(--cyan);">:</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <label style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;color:var(--text-dim);">MIN</label>
+        <select id="alarmMin" style="font-family:'Orbitron',monospace;font-size:11px;padding:6px 10px;background:rgba(255,255,255,0.06);border:1px solid rgba(77,217,240,0.3);color:#e8f4ff;border-radius:4px;cursor:pointer;"></select>
+      </div>
+      <button onclick="setAlarm()" style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;padding:7px 16px;border:1px solid rgba(77,217,240,0.5);background:rgba(77,217,240,0.08);color:var(--cyan);border-radius:4px;cursor:pointer;">⏰ SET</button>
+      <button onclick="clearAlarm()" style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;padding:7px 16px;border:1px solid rgba(255,100,100,0.4);background:rgba(255,100,100,0.06);color:#ff8080;border-radius:4px;cursor:pointer;">✕ CLEAR</button>
+    </div>
+    <div id="alarmStatus" style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;color:var(--text-dim);text-align:center;">NO ALARM SET</div>
   </div>
 
   <!-- Professor -->
@@ -639,6 +659,8 @@ function updateClock() {
   playTick();
   // 정시 알림
   if (now.getMinutes() === 0 && now.getSeconds() === 0) playHourChime(hour);
+  // 알람 체크
+  checkAlarm(now);
 }
 /* ── 공유 AudioContext (자동 unlock) ── */
 let _sharedCtx = null;
@@ -660,114 +682,75 @@ window.addEventListener('load', () => {
     src.start(0);
     src.stop(ctx.currentTime + 0.001);
   } catch(e) {}
-  // 배경음악 시작
-  setTimeout(startPiano, 800);
 });
 // 첫 번째 사용자 상호작용 시에도 unlock
 ['click','touchstart','keydown'].forEach(ev =>
   document.addEventListener(ev, () => {
     try { getAudioCtx(); } catch(e) {}
-    if (!_pianoRunning) startPiano();
   }, { once: true })
 );
 
 /* ── 피아노 배경음악 ── */
-let _pianoRunning = false;
-let _pianoTimeout = null;
+/* ── 알람 설정 ── */
+(function() {
+  const hourSel = document.getElementById('alarmHour');
+  const minSel  = document.getElementById('alarmMin');
+  for (let h = 0; h < 24; h++) {
+    const o = document.createElement('option');
+    o.value = h;
+    o.textContent = String(h).padStart(2,'0');
+    hourSel.appendChild(o);
+  }
+  for (let m = 0; m < 60; m += 5) {
+    const o = document.createElement('option');
+    o.value = m;
+    o.textContent = String(m).padStart(2,'0');
+    minSel.appendChild(o);
+  }
+  const now = new Date();
+  hourSel.value = now.getHours();
+  minSel.value  = Math.floor(now.getMinutes() / 5) * 5;
+})();
 
-// 피아노 음색: 기본 사인 + 배음 합성
-/* ── 피아노 음색 합성 ── */
-function pianoNote(ctx, freq, startTime, duration, vol, masterGain) {
-  [1, 2, 3, 4].forEach((h, i) => {
-    const osc = ctx.createOscillator(), g = ctx.createGain();
-    osc.type = 'sine'; osc.frequency.value = freq * h;
-    const w = [1.0, 0.5, 0.25, 0.1][i];
-    g.gain.setValueAtTime(0, startTime);
-    g.gain.linearRampToValueAtTime(vol * w, startTime + 0.015);
-    g.gain.exponentialRampToValueAtTime(vol * w * 0.3, startTime + duration * 0.5);
-    g.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
-    osc.connect(g); g.connect(masterGain);
-    osc.start(startTime); osc.stop(startTime + duration + 0.1);
-  });
+let _alarmH = -1, _alarmM = -1, _alarmFired = false;
+
+function setAlarm() {
+  _alarmH = parseInt(document.getElementById('alarmHour').value);
+  _alarmM = parseInt(document.getElementById('alarmMin').value);
+  _alarmFired = false;
+  const hh = String(_alarmH).padStart(2,'0');
+  const mm = String(_alarmM).padStart(2,'0');
+  document.getElementById('alarmStatus').textContent = `ALARM SET · ${hh}:${mm}`;
+  document.getElementById('alarmStatus').style.color = '#7ecfa0';
+  document.getElementById('alarmStatus').classList.add('alarm-blink');
 }
 
-// 로파이 재즈 피아노 멜로디
-const PIANO_MELODY = [
-  [392,0.6],[440,0.3],[494,0.9],[440,0.3],[415,0.6],[370,1.2],
-  [440,0.6],[494,0.3],[554,0.9],[494,0.3],[466,0.6],[440,1.2],
-  [494,0.6],[554,0.3],[622,0.9],[587,0.3],[554,0.6],[494,1.2],
-  [466,0.6],[440,0.6],[415,0.6],[370,2.0],
-  [392,0.6],[440,0.3],[494,0.9],[466,0.3],[440,0.6],[415,1.2],
-  [370,0.6],[392,0.3],[440,0.9],[415,0.3],[392,0.6],[370,1.2],
-  [349,0.6],[370,0.3],[392,0.9],[415,0.3],[440,0.6],[466,1.2],
-  [440,0.6],[415,0.6],[392,0.6],[370,2.4],
-];
-
-// 베이스 코드
-const PIANO_BASS = [
-  [147,1.2],[185,1.2],[220,1.2],[196,1.2],
-  [147,1.2],[185,1.2],[165,1.2],[147,2.4],
-];
-
-function startPiano() {
-  if (_pianoRunning) return;
-  _pianoRunning = true;
-  playPianoLoop();
+function clearAlarm() {
+  _alarmH = -1; _alarmM = -1; _alarmFired = false;
+  stopAlarmAlert();
+  document.getElementById('alarmStatus').textContent = 'NO ALARM SET';
+  document.getElementById('alarmStatus').style.color = 'var(--text-dim)';
+  document.getElementById('alarmStatus').classList.remove('alarm-blink');
+  document.getElementById('alarmStatus').style.animation = '';
 }
 
-function stopPiano() {
-  _pianoRunning = false;
-  if (_pianoTimeout) { clearTimeout(_pianoTimeout); _pianoTimeout = null; }
-}
-
-function playPianoLoop() {
-  if (!_pianoRunning) return;
-  try {
-    const ctx = getAudioCtx();
-    const masterGain = ctx.createGain();
-    masterGain.gain.value = 0.18;
-    // 리버브
-    const reverb = ctx.createConvolver();
-    const rLen = ctx.sampleRate * 1.5;
-    const rBuf = ctx.createBuffer(2, rLen, ctx.sampleRate);
-    for (let c = 0; c < 2; c++) {
-      const d = rBuf.getChannelData(c);
-      for (let i = 0; i < rLen; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/rLen, 2);
-    }
-    reverb.buffer = rBuf;
-    const reverbGain = ctx.createGain(); reverbGain.gain.value = 0.3;
-    masterGain.connect(reverb); reverb.connect(reverbGain); reverbGain.connect(ctx.destination);
-    masterGain.connect(ctx.destination);
-
-    // 멜로디
-    let t = ctx.currentTime + 0.1;
-    PIANO_MELODY.forEach(([freq, dur]) => {
-      pianoNote(ctx, freq, t, dur * 0.85, 0.6, masterGain);
-      t += dur * 0.55;
-    });
-
-    // 베이스
-    let bt = ctx.currentTime + 0.1;
-    const totalMelDur = PIANO_MELODY.reduce((s,[,d])=>s+d*0.55, 0);
-    const bassDur = PIANO_BASS.reduce((s,[,d])=>s+d*0.55, 0);
-    const bassReps = Math.ceil(totalMelDur / bassDur);
-    for (let r = 0; r < bassReps; r++) {
-      PIANO_BASS.forEach(([freq, dur]) => {
-        pianoNote(ctx, freq, bt, dur * 0.8, 0.35, masterGain);
-        pianoNote(ctx, freq * 1.5, bt, dur * 0.8, 0.2, masterGain);
-        bt += dur * 0.55;
-      });
-    }
-
-    const totalDuration = totalMelDur * 1000 + 1000;
-    _pianoTimeout = setTimeout(() => {
-      if (_pianoRunning) playPianoLoop();
-    }, totalDuration);
-
-  } catch(e) {
-    _pianoTimeout = setTimeout(() => { if (_pianoRunning) playPianoLoop(); }, 5000);
+function checkAlarm(now) {
+  if (_alarmH < 0 || _alarmFired) return;
+  if (now.getHours() === _alarmH && now.getMinutes() === _alarmM && now.getSeconds() === 0) {
+    _alarmFired = true;
+    document.getElementById('alarmStatus').textContent = '⏰ ALARM RINGING!';
+    document.getElementById('alarmStatus').style.color = '#ffe066';
+    document.getElementById('alarmStatus').classList.remove('alarm-blink');
+    document.getElementById('alarmStatus').style.animation = 'flashRed 0.6s ease-in-out infinite';
+    startAlarmAlert();
+    setTimeout(() => {
+      stopAlarmAlert();
+      document.getElementById('alarmStatus').textContent = 'ALARM DONE';
+      document.getElementById('alarmStatus').style.color = 'var(--text-dim)';
+    }, 30000);
   }
 }
+
 function playTick() {
   try {
     const ctx = getAudioCtx();
@@ -830,7 +813,7 @@ function setBreak(min, btn) {
   document.getElementById('startBtn').textContent = '▶ START';
   updateCountdownDisplay();
   document.getElementById('progressFill').style.width = '100%';
-  document.getElementById('countdownDisplay').className = 'countdown-time paused';
+  document.getElementById('countdownDisplay').className = 'countdown-time idle';
 }
 
 function updateCountdownDisplay() {
@@ -875,7 +858,7 @@ function resetTimer() {
   timerRunning = false;
   breakSeconds = totalSeconds;
   document.getElementById('startBtn').textContent = '▶ START';
-  document.getElementById('countdownDisplay').className = 'countdown-time paused';
+  document.getElementById('countdownDisplay').className = 'countdown-time idle';
   updateCountdownDisplay();
 }
 
@@ -964,17 +947,31 @@ function playAlertBeep() {
   } catch(e) {}
 }
 
-function startAlertLoop() {
+/* 브레이크 타이머 알림 (독립) */
+let _timerAlertInterval = null;
+function startTimerAlert() {
+  stopTimerAlert();
   playAlertBeep();
-  alertBeepInterval = setInterval(playAlertBeep, 4000);
+  _timerAlertInterval = setInterval(playAlertBeep, 4000);
+}
+function stopTimerAlert() {
+  if (_timerAlertInterval) { clearInterval(_timerAlertInterval); _timerAlertInterval = null; }
 }
 
-function stopAlertLoop() {
-  if (alertBeepInterval) {
-    clearInterval(alertBeepInterval);
-    alertBeepInterval = null;
-  }
+/* 알람 알림 (독립) */
+let _alarmAlertInterval = null;
+function startAlarmAlert() {
+  stopAlarmAlert();
+  playAlertBeep();
+  _alarmAlertInterval = setInterval(playAlertBeep, 4000);
 }
+function stopAlarmAlert() {
+  if (_alarmAlertInterval) { clearInterval(_alarmAlertInterval); _alarmAlertInterval = null; }
+}
+
+/* 하위 호환 유지 */
+function startAlertLoop() { startTimerAlert(); }
+function stopAlertLoop()  { stopTimerAlert(); }
 
 </script>
 </body>
