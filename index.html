@@ -164,7 +164,7 @@
     font-size: clamp(16px, 2.2vw, 22px);
     font-weight: 600;
     letter-spacing: 4px;
-    color: #ffe066;
+    color: #ffffff;
   }
 
   /* ─── BREAK TIMER ─── */
@@ -276,18 +276,18 @@
   }
   .prof-avatar {
     width: clamp(44px,6vw,56px); height: clamp(44px,6vw,56px);
-    border-radius: 50%; border: 2px solid #b8d9f0;
-    background: rgba(184,217,240,0.1); overflow: hidden; flex-shrink: 0;
-    box-shadow: 0 0 12px rgba(184,217,240,0.4);
+    border-radius: 50%; border: 2px solid rgba(255,255,255,0.55);
+    background: rgba(255,255,255,0.05); overflow: hidden; flex-shrink: 0;
+    box-shadow: 0 0 10px rgba(255,255,255,0.2);
   }
   .prof-avatar img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
   .prof-name {
     font-family: 'Orbitron', monospace; font-size: 11px; font-weight: 400;
-    letter-spacing: 3px; color: #b8d9f0;
+    letter-spacing: 3px; color: rgba(255,255,255,0.55);
   }
   .prof-sub {
     font-family: 'Orbitron', monospace; font-size: 11px;
-    letter-spacing: 2px; color: #b8d9f0; margin-top: 3px;
+    letter-spacing: 2px; color: rgba(255,255,255,0.55); margin-top: 3px;
   }
 
   /* ─── BOTTOM BAR (fixed) ─── */
@@ -417,7 +417,7 @@
       <button onclick="setAlarm()" style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;padding:7px 16px;border:1px solid rgba(77,217,240,0.5);background:rgba(77,217,240,0.08);color:var(--cyan);border-radius:4px;cursor:pointer;">⏰ SET</button>
       <button onclick="clearAlarm()" style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;padding:7px 16px;border:1px solid rgba(255,100,100,0.4);background:rgba(255,100,100,0.06);color:#ff8080;border-radius:4px;cursor:pointer;">✕ CLEAR</button>
     </div>
-    <div id="alarmStatus" style="font-family:'Orbitron',monospace;font-size:11px;letter-spacing:2px;color:var(--text-dim);text-align:center;">NO ALARM SET</div>
+    <div id="alarmStatus" style="font-family:'Orbitron',monospace;font-size:14px;letter-spacing:2px;color:var(--text-dim);text-align:center;">NO ALARM SET</div>
   </div>
 
   <!-- Professor -->
